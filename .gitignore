@@ -1,0 +1,29 @@
+# Carpetas generadas por MCUXpresso
+Debug/
+Release/
+build/
+CMSISv1p30_LPC17xx/
+CMSISv2p00_DSPLIB_CM3/
+AzureRTOS_TAD_logs/
+FreeRTOS_TAD_logs/
+ZephyrRTOS_TAD_logs/
+
+
+# archivos de estudio y carpetas personales
+documentacion placa/
+*.pdf
+*.txt
+*.ppt
+*.pptx
+*.odp
+*.docx
+
+# Binarios y archivos de salida
+*.elf
+*.bin
+*.hex
+*.map
+*.lst
+*.o
+*.d
+*.a

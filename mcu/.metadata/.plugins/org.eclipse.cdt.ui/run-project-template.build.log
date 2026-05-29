@@ -1,0 +1,15 @@
+12:53:44 **** Build of configuration Debug for project run-project-template ****
+make -r -j12 all 
+Building file: ../src/run-project-template.c
+Invoking: MCU C Compiler
+arm-none-eabi-gcc -DDEBUG -D__CODE_RED -DCORE_M3 -D__USE_CMSIS=CMSISv2p00_LPC17xx -D__LPC17XX__ -D__REDLIB__ -I"/home/vzucc/Documentos/UNC/3TO AÑO/ELECTRONICA DIGITAL 3/mcu/CMSISv2p00_LPC17xx/inc" -O0 -fno-common -g3 -gdwarf-4 -Wall -c -fmessage-length=0 -fno-builtin -ffunction-sections -fdata-sections -fmerge-constants -fmacro-prefix-map="../src/"= -mcpu=cortex-m3 -mthumb -fstack-usage -specs=redlib.specs -MMD -MP -MF"src/run-project-template.d" -MT"src/run-project-template.o" -MT"src/run-project-template.d" -o "src/run-project-template.o" "../src/run-project-template.c"
+../src/run-project-template.c:4:10: fatal error: lpc17xx_dac.h: No such file or directory
+    4 | #include "lpc17xx_dac.h"
+      |          ^~~~~~~~~~~~~~~
+compilation terminated.
+make[1]: *** [src/subdir.mk:26: src/run-project-template.o] Error 1
+make: *** [makefile:35: all] Error 2
+"make -r -j12 all" terminated with exit code 2. Build might be incomplete.
+
+12:53:45 Build Failed. 3 errors, 0 warnings. (took 429ms)
+

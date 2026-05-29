@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="ExternalProjectImportWizard">
+		<item key="WizardProjectsImportPage.STORE_COPY_PROJECT_ID" value="true"/>
+		<item key="WizardProjectsImportPage.STORE_ARCHIVE_SELECTED" value="true"/>
+		<item key="WizardProjectsImportPage.STORE_CLOSE_CREATED_PROJECTS_ID" value="false"/>
+		<item key="WizardProjectsImportPage.STORE_HIDE_CONFLICTING_PROJECTS_ID" value="false"/>
+		<list key="WizardProjectsImportPage.STORE_DIRECTORIES">
+			<item value=""/>
+		</list>
+		<list key="WizardProjectsImportPage.STORE_ARCHIVES">
+			<item value="/usr/local/mcuxpressoide-25.6.136/ide/plugins/com.nxp.mcuxpresso.tools.wizards_25.6.0.202501151204/Examples/Legacy/NXP/LPC1000/LPC17xx/LPC17xx_OldCMSIS_Libraries.zip"/>
+		</list>
+	</section>
+	<section name="com.crt.quickstart.views.wizards.examples.QSExampleSelectionPage">
+		<item key="dirname" value="/usr/local/mcuxpressoide-25.6.136/ide/plugins/com.nxp.mcuxpresso.tools.wizards_25.6.0.202501151204/Examples/Legacy/NXP/LPC1000/LPC17xx"/>
+	</section>
+</section>

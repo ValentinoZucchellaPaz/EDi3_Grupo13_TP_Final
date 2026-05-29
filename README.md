@@ -1,8 +1,11 @@
 ## Radar Ultrasónico con Modo Manual, Automático y Sonar Acústico
 
 El trabajo consta de un **sensor de distancia acoplado encima de un servo motor**, de esta manera se realiza un barrido 180° y se **mandan las mediciones de distancia a la computadora mediante UART**.
+
 En la computadora se **reconstruye la imagen con los datos y se controla el modo** de funcionamiento: automatico o manual.
+
 El modo manual va a usar un modulo joystick (analogico y convierto con ADC) para manejar el movimiento del servo (barrido)
+
 Ademas de todo lo anterior, las mediciones del sensor se enviarán al DAC, el cual va a transformar eso en analogico y alimentar un buzzer, de manera que cuando se detecte un objeto se tendrá un sonido similar al de un sonar.
 
 ### Sensor
