@@ -1,66 +1,121 @@
-// hacer onda serrucho con periodo 1ms y 10 cambios por periodo
+/*
+ * Copyright 2022 NXP
+ * NXP confidential.
+ * This software is owned or controlled by NXP and may only be used strictly
+ * in accordance with the applicable license terms.  By expressly accepting
+ * such terms or by downloading, installing, activating and/or otherwise using
+ * the software, you are agreeing that you have read, and that you agree to
+ * comply with and are bound by, such license terms.  If you do not agree to
+ * be bound by the applicable license terms, then you may not retain, install,
+ * activate or otherwise use the software.
+ */
 
+#ifdef __USE_CMSIS
 #include "LPC17xx.h"
-#include "lpc17xx_dac.h"
 #include "lpc17xx_timer.h"
+#include "lpc17xx_gpio.h"
+#include "lpc17xx_pinsel.h"
+#endif
 
-uint16_t values[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+#include <cr_section_macros.h>
 
-void configDAC(void);
-void configTimer(void);
+#include <stdio.h>
 
-int main(void) {
+volatile uint32_t duty = 1000; // 1ms -> 0°
+volatile uint8_t subiendo = 1;
 
-    configDAC();
-    configTimer();
-    while(1){
+void confTimerPWM(uint32_t duty);
+void confPin();
+
+int main(void)
+{
+
+    confPin();
+    confTimerPWM(duty);
+
+    while (1)
+    {
     }
-    return 1;
+    return 0;
 }
 
-void configTimer(void) {
-    // config prescaler struct
-    TIM_TIMERCFG_T prescalerConfig;
-    prescalerConfig.prescaleOpt = TIM_US;
-    prescalerConfig.prescaleValue = 100;
-
-    // config match0 struct
-    TIM_MATCHCFG_T match0Config;
-    match0Config.channel = TIM_MATCH_0;
-    match0Config.extOpt = TIM_NOTHING;
-    match0Config.intEn = ENABLE;
-    match0Config.resetEn = DISABLE;
-    match0Config.stopEn = DISABLE;
-    match0Config.matchValue = 1;
-
-    // config match1 struct
-    TIM_MATCHCFG_T match1Config;
-    match1Config.channel = TIM_MATCH_1;
-    match1Config.extOpt = TIM_NOTHING;
-    match1Config.intEn = DISABLE;
-    match1Config.resetEn = ENABLE;
-    match1Config.stopEn = DISABLE;
-    match1Config.matchValue = 10;
-
-
-    TIM_InitTimer(LPC_TIM0, &prescalerConfig);
-    TIM_ConfigMatch(LPC_TIM0, &match0Config);
-    TIM_ConfigMatch(LPC_TIM0, &match1Config);
-    NVIC_EnableIRQ(TIMER0_IRQn);
-    TIM_Enable(LPC_TIM0);
+void confPin()
+{
+    PINSEL_CFG_T pinCfg = {
+        .func = 0,
+        .mode = PINSEL_TRISTATE,
+        .pin = PIN_0,
+        .port = PORT_0};
+    PINSEL_ConfigPin(&pinCfg);
+    GPIO_SetDir(PORT_0, PIN_0, GPIO_OUTPUT);
+    GPIO_SetPinState(PORT_0, PIN_0, SET);
 }
 
-void configDAC(){
-	DAC_Init();
-	DAC_SetBias(DAC_350uA);
-	DAC_UpdateValue(0);
+void confTimerPWM(uint32_t duty)
+{
+    TIM_TIMERCFG_T timerCfg = {TIM_US, 1};
+    TIM_InitTimer(LPC_TIM1, &timerCfg);
+
+    TIM_MATCHCFG_T match1Cfg = {0}; // match 1 es el periodo
+    match1Cfg.channel = TIM_MATCH_1;
+    match1Cfg.intEn = ENABLE;
+    match1Cfg.stopEn = DISABLE;
+    match1Cfg.resetEn = ENABLE;
+    match1Cfg.matchValue = 20000;
+
+    TIM_MATCHCFG_T match0Cfg = {0}; // match 0 es el ciclo de trabajo
+    match0Cfg.channel = TIM_MATCH_0;
+    match0Cfg.intEn = ENABLE;
+    match0Cfg.stopEn = DISABLE;
+    match0Cfg.resetEn = DISABLE;
+    match0Cfg.matchValue = duty;
+
+    TIM_ConfigMatch(LPC_TIM1, &match0Cfg);
+    TIM_ConfigMatch(LPC_TIM1, &match1Cfg);
+    NVIC_EnableIRQ(TIMER1_IRQn);
+    TIM_Enable(LPC_TIM1);
 }
 
-void TIMER0_IRQHandler(void){
-    static uint8_t onda_count = 0;
-    if (TIM_GetIntStatus(LPC_TIM0, TIM_MR0_INT)){
-        TIM_ClearIntPending(LPC_TIM0, TIM_MR0_INT);
-        onda_count = (onda_count + 1) % 10;
-        DAC_UpdateValue((1023/10)* values[onda_count]);
+void TIMER1_IRQHandler()
+{
+    if (TIM_GetIntStatus(LPC_TIM1, TIM_MR0_INT) == SET)
+    {
+        TIM_ClearIntPending(LPC_TIM1, TIM_MR0_INT);
+        // bajo pin
+        GPIO_SetPinState(PORT_0, PIN_0, 0);
+    }
+    else if (TIM_GetIntStatus(LPC_TIM1, TIM_MR1_INT) == SET)
+    {
+        TIM_ClearIntPending(LPC_TIM1, TIM_MR1_INT);
+        // subo pin
+        GPIO_SetPinState(PORT_0, PIN_0, 1);
+
+        // =========================
+        // ACTUALIZO DUTY
+        // =========================
+
+        if (subiendo)
+        {
+            duty += 10;
+
+            if (duty >= 2000)
+            {
+                duty = 2000;
+                subiendo = 0;
+            }
+        }
+        else
+        {
+            duty -= 10;
+
+            if (duty <= 1000)
+            {
+                duty = 1000;
+                subiendo = 1;
+            }
+        }
+
+        // actualizo MR0
+        TIM_UpdateMatchValue(LPC_TIM1, TIM_MATCH_0, duty);
     }
 }
