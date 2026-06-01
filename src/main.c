@@ -42,8 +42,13 @@ int main(void)
         // Ticks del sevo cada 50ms
         if(flag_50ms){
             flag_50ms = 0;
-            uint16_t joy = adcLeerJoystick();  // lee ADC joystick
-            servoTick(joy);                    // actualiza servo
+            if(servo_modo == SERVO_MODO_MANUAL){
+                uint16_t joy = adcLeerJoystick();  // lee ADC joystick
+                servoTick(joy);                    // actualiza servo
+            }else{
+                servoTick(0);
+            }
+            
         }
     }
     
