@@ -23,7 +23,7 @@ void configTimerPWM(void){
         .mode      = PINSEL_PULLUP,
         .openDrain = DISABLE
     };
-    GPIO_SetValue(PORT_1,(1<<29));
+    GPIO_ClearPins(PORT_1,(1<<29));
     GPIO_SetDir(PORT_1,(1<<29),GPIO_OUTPUT);
     PINSEL_ConfigPin(&pinCfg);
 
@@ -121,18 +121,20 @@ void servoTick(uint16_t joystick_raw){
 }
 void TIMER0_IRQHandler(void)
 {
+      /*
+        MR0 - Comienza nuevo período - HIGH
+    */
+    if(TIM_GetIntStatus(LPC_TIM0,TIM_MR0_INT) == SET){
+        TIM_ClearIntPending(LPC_TIM0,TIM_MR0_INT);
+        GPIO_SetPins(PORT_1,(1 << 29));
+    }
+    
     /*
         MR1 - Fin del pulso - LOW
     */
     if(TIM_GetIntStatus(LPC_TIM0,TIM_MR1_INT) == SET){
         TIM_ClearIntPending(LPC_TIM0,TIM_MR1_INT);
-        GPIO_ClearValue(PORT_1,(1 << 29));
+        GPIO_ClearPins(PORT_1,(1 << 29));
     }
-    /*
-        MR0 - Comienza nuevo período - HIGH
-    */
-    if(TIM_GetIntStatus(LPC_TIM0,TIM_MR0_INT) == SET){
-        TIM_ClearIntPending(LPC_TIM0,TIM_MR0_INT);
-        GPIO_SetValue(PORT_1,(1 << 29));
-    }
+  
 }

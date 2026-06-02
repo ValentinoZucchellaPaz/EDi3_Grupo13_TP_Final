@@ -8,3 +8,5 @@
 extern volatile uint8_t flag_50ms;
 
 void configSystick(void);
+
+#endif
