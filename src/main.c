@@ -1,57 +1,43 @@
+/*
+ * Copyright 2022 NXP
+ * NXP confidential.
+ * This software is owned or controlled by NXP and may only be used strictly
+ * in accordance with the applicable license terms.  By expressly accepting
+ * such terms or by downloading, installing, activating and/or otherwise using
+ * the software, you are agreeing that you have read, and that you agree to
+ * comply with and are bound by, such license terms.  If you do not agree to
+ * be bound by the applicable license terms, then you may not retain, install,
+ * activate or otherwise use the software.
+ */
+
 #ifdef __USE_CMSIS
 #include "LPC17xx.h"
-#include "config/dac_config.h"
-#include "config/systick_cfg.h"
-#include "config/timer_pwm.h"
-#include "config/adc_config.h"
-#include "config/uart_config.h"
-#include "config/dma_config.h"
-#endif
+#include "Config/timer_pwm.h"
+#include "Config/systick_cfg.h"
+#include "lpc17xx_timer.h"
+#include "lpc17xx_gpio.h"
+#include "lpc17xx_systick.h"
+#include "lpc17xx_pinsel.h"
+
+#include <stdint.h>
+
 
 #include <cr_section_macros.h>
 
 #include <stdio.h>
 
 
-
 int main(void)
 {
-    GPDMA_Init();
-
-    configSystick();
     configTimerPWM();
-    configADC();
-    configUART();
-    
-    while (1){
-        // Procesar comandos de la PC
-        if(cmd_recibido){
-            cmd_recibido = 0;
-            switch(ultimo_cmd){
-                case CMD_AUTO:   
-                    servoSetModo(SERVO_MODO_AUTO);   
-                    break;
-                case CMD_MANUAL: 
-                    servoSetModo(SERVO_MODO_MANUAL); 
-                    break;
-                default: 
-                    break;
-            }
-        }
-
-        // Ticks del sevo cada 50ms
-        if(flag_50ms){
-            flag_50ms = 0;
-            if(servo_modo == SERVO_MODO_MANUAL){
-                uint16_t joy = adcLeerJoystick();  // lee ADC joystick
-                servoTick(joy);                    // actualiza servo
-            }else{
-                servoTick(0);
-            }
-            
-        }
+    //configSystick();
+    //servoSetAngulo(90);
+    while(1)
+    {
+    	//if (flag_50ms){
+    	//	flag_50ms = 0;
+    	//    servoTick(0);
+    	//}
     }
-    
-    return 0;
 }
-
+#endif

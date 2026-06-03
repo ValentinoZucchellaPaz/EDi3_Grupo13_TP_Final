@@ -1,5 +1,5 @@
 #include "systick_cfg.h"
-
+#include <stdint.h>
 volatile uint8_t flag_50ms = 0;
 
 void configSystick(void){
