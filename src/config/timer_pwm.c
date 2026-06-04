@@ -125,7 +125,7 @@ void TIMER0_IRQHandler(void)
     }
 
     /* Subir pin */
-    LPC_GPIO0->FIOSET = (1 << 0);
+    LPC_GPIO0->FIOCLR = (1 << 0);
 
     /* Cargar duración del pulso en Timer1 y arrancarlo */
     LPC_TIM1->TCR = (1 << 1);             /* reset Timer1      */
@@ -138,5 +138,5 @@ void TIMER0_IRQHandler(void)
 void TIMER1_IRQHandler(void)
 {
     LPC_TIM1->IR = (1 << 0);              /* limpiar flag      */
-    LPC_GPIO0->FIOCLR = (1 << 0);         /* P0.0 = LOW        */
+    LPC_GPIO0->FIOSET = (1 << 0);         /* P0.0 = LOW        */
 }
