@@ -5,7 +5,7 @@
 
 // #include <cr_section_macros.h>
 
-#include <stdio.h>
+// #include <stdio.h>
 
 // parte 1: enviar pulso 10us a TRIG del sensor -> toggle de P1.0 (uso gpio e interrupciones de timer) y ese pin va al match
 // parte 2: activar contador y esperar capture, luego mido tiempo

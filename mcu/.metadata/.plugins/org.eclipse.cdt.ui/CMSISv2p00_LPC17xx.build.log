@@ -1,7 +1,0 @@
-12:53:43 **** Build of configuration Debug for project CMSISv2p00_LPC17xx ****
-make -r -j12 all 
-Drivers/src/debug_frmwrk.d:1: *** hay varios patrones de objetivos.  Alto.
-"make -r -j12 all" terminated with exit code 2. Build might be incomplete.
-
-12:53:44 Build Failed. 1 errors, 0 warnings. (took 319ms)
-
