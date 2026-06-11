@@ -61,7 +61,7 @@ void config_timer1_pwm(void)
     TIM_Disable(LPC_TIM1);
     TIM_ResetCounter(LPC_TIM1);
     // config y prendo
-    // TIM_ConfigMatch(LPC_TIM1, &match1cfg);
+    TIM_ConfigMatch(LPC_TIM1, &match1cfg);
     TIM_ConfigMatch(LPC_TIM1, &match0cfg);
     NVIC_EnableIRQ(TIMER1_IRQn);
 }
@@ -77,9 +77,9 @@ void TIMER1_IRQHandler()
 
     if (TIM_GetIntStatus(LPC_TIM1, TIM_MR1_INT) == SET) // se cumplio periodo, pongo 1
      {
-    	 flag60_ms = 1;
          TIM_ClearIntPending(LPC_TIM1, TIM_MR1_INT);
          GPIO_SetPinState(PORT_0, PIN_18, 1);
+    	 flag60_ms = 1;
      }
 }
 
