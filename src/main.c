@@ -12,32 +12,24 @@
 
 #ifdef __USE_CMSIS
 #include "LPC17xx.h"
-#include "Config/timer_pwm.h"
-#include "Config/systick_cfg.h"
-#include "lpc17xx_timer.h"
-#include "lpc17xx_gpio.h"
-#include "lpc17xx_systick.h"
-#include "lpc17xx_pinsel.h"
+#include "ultrasonic_config.h"
+#endif
 
-#include <stdint.h>
-
-
-#include <cr_section_macros.h>
+// #include <cr_section_macros.h>
 
 #include <stdio.h>
 
+// parte 1: enviar pulso 10us a TRIG del sensor -> toggle de P1.0 (uso gpio e interrupciones de timer) y ese pin va al match
+// parte 2: activar contador y esperar capture, luego mido tiempo
+// parte 3: encapsular logica en funcion pulseln como en arduino
+
+// conexiones, el echo devuelve 5v, entonces debo usar resistencias para no quemar el gpio de la placa
 
 int main(void)
 {
-    configTimerPWM();
-    //configSystick();
-    //servoSetAngulo(90);
-    while(1)
+    Ultrasonic_Init();
+    while (1)
     {
-    	//if (flag_50ms){
-    	//	flag_50ms = 0;
-    	//    servoTick(0);
-    	//}
     }
+    return 0;
 }
-#endif
