@@ -7,6 +7,9 @@ CMSISv2p00_DSPLIB_CM3/
 AzureRTOS_TAD_logs/
 FreeRTOS_TAD_logs/
 ZephyrRTOS_TAD_logs/
+mcu_run/CMSISv2p00_LPC17xx
+mcu_run/.metadata
+mcu_run/.mcuxpressoide_packages_support
 
 
 # archivos de estudio y carpetas personales

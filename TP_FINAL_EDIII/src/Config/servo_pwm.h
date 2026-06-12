@@ -1,5 +1,5 @@
-#ifndef TIMER_PWM_H
-#define TIMER_PWM_H
+#ifndef SERVO_PWM_H
+#define SERVO_PWM_H
 
 #include "lpc17xx_timer.h"
 #include "lpc17xx_pinsel.h"
@@ -8,8 +8,8 @@
 
 
 // ── Configuración física del servo ──────────────────────
-#define SERVO_MIN_US    500     // 1ms  →   0°
-#define SERVO_MAX_US    2500     // 2ms  → 180°
+#define SERVO_MIN_US    500      // 0.5ms  →   0°
+#define SERVO_MAX_US    2500     // 2.5ms  → 180°
 #define SERVO_PERIOD_US 20000    // 20ms   → 50Hz
 
 // ── Límites angulares del barrido ───────────────────────
