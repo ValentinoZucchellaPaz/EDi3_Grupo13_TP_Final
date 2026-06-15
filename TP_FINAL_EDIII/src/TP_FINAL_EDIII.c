@@ -18,70 +18,72 @@ typedef struct
     uint16_t distancia;
 } radar_sample_t;
 
-radar_sample_t radar_buffer[BUFFER_SIZE];
+radar_sample_t radar_bufferA[BUFFER_SIZE];
+radar_sample_t radar_bufferB[BUFFER_SIZE];
+
+volatile uint8_t flag_buffer = 1; //comienza con buffer A
 
 int main(void)
 {
     GPIO_SetDir(PORT_0, 1 << 22, GPIO_OUTPUT);
     GPIO_SetPinState(PORT_0, PIN_22, 1);
 
+    GPIO_SetDir(PORT_0, 1 << 0, GPIO_OUTPUT);
+        GPIO_SetPinState(PORT_0, PIN_1, 0);
+
     Ultrasonic_Init();
     DAC_Config();
     UART0_Config();
+    configTimerPWM(); //servo
+
+
 
     uint16_t idx = 0;
     uint16_t angulo_servo = 0;
     uint16_t distance = 0;
 
-    UART0_SendString("while\r\n");
-
     while (1)
     {
-       UART0_SendString("ENTRE LOOP\r\n");
+       //UART0_SendString("ENTRE LOOP\r\n");
        distance = Ultrasonic_GetDistance();
-       UART0_SendString("SALI DISTANCE\r\n");DAC_SetDistance(distance);
+       angulo_servo = servoGetAngulo();
+       //UART0_SendString("SALI DISTANCE\r\n");
        DAC_SetDistance(distance);
 
-       angulo_servo = servoGetAngulo();
+       servoSetAnguloAutomatico();
+
         // Guardar muestra en buffer
-        radar_buffer[idx].angulo = angulo_servo;
-        radar_buffer[idx].distancia = distance;
+       if(flag_buffer){
+    	   radar_bufferA[idx].angulo = angulo_servo;
+    	   radar_bufferA[idx].distancia = distance;
+       }else{
+    	   radar_bufferB[idx].angulo = angulo_servo;
+    	   radar_bufferB[idx].distancia = distance;
+       }
 
         idx++;
-
-        if (angulo_servo > 180){
-        	angulo_servo = 0;
-        }
 
 
         if (idx == BUFFER_SIZE)
         {
-            UART0_SendString("MANDO BUFFER\r\n");
+        	if(flag_buffer){
+        		flag_buffer = 0;
+        		UART0_SendString("MANDO BUFFER A\r\n");
+        		UART0_SendBuffer((uint8_t*)radar_bufferA,sizeof(radar_bufferA));
 
-            UART0_SendBuffer(
-                (uint8_t*)radar_buffer,
-				sizeof(radar_buffer)
-            );
+        	}else{
+        		flag_buffer = 1;
+        		UART0_SendString("MANDO BUFFER B\r\n");
+        		UART0_SendBuffer((uint8_t*)radar_bufferB,sizeof(radar_bufferB));
+        	}
+
 
             idx = 0;
 
             // delay para no saturar
-            for (volatile int i = 0; i < 5000000; i++);
+            //for (volatile int i = 0; i < 5000000; i++);
         }
     }
 
     return 0;
 }
-
-
-/*
-buffer nuevo
-↓
-configuro DMA completo
-↓
-start
-↓
-IRQ termina
-↓
-dma_busy = 0
-*/

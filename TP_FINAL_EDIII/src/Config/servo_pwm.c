@@ -70,6 +70,10 @@ void servoSetAngulo(uint8_t angulo)
     LPC_TIM0->MR1 = pulso_us;
 }
 
+uint8_t servoGetAngulo(){
+	return servo_angulo;
+}
+
 void servoSetModo(ServoModo_t modo)
 {
     servo_modo = modo;
@@ -120,10 +124,10 @@ void TIMER0_IRQHandler(void)
     }
 }
 
-void servoSetAnguloAutomatico(uint8_t angulo)
+void servoSetAnguloAutomatico()
 {
     cnt_periodos++;
-    if (cnt_periodos >= SERVO_PERIODOS_POR_PASO)
+    if (cnt_periodos >= SERVO_PERIODOS_POR_PASO) // cambiar
     {
         cnt_periodos = 0;
 
