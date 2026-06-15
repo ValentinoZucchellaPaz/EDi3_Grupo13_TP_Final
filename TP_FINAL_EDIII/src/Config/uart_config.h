@@ -3,8 +3,10 @@
 
 #include "LPC17xx.h"
 #include "lpc17xx_uart.h"
+#include "dma_config.h"
 
 void UART0_Config(void);
 void UART0_SendString(char *str);
+void UART0_SendBuffer(uint8_t *buffer, uint32_t size);
 
 #endif

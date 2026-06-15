@@ -17,25 +17,27 @@ void UART0_Config(void)
     {
         .resetRxBuf = ENABLE,
         .resetTxBuf = ENABLE,
-        .dmaMode    = DISABLE,
+        .dmaMode    = ENABLE,
         .level      = UART_FIFO_TRGLEV0
     };
 
     UART_Init(UART0, &uartCfg);
     UART_FIFOConfig(UART0, &fifoCfg);
-
     UART_TxEnable(UART0);
+
+    DMA_Init();
 }
 
 void UART0_SendString(char *str)
 {
-    while(*str)
+    while (*str)
     {
-        UART_Send(UART0,
-                  (uint8_t *)str,
-                  1,
-                  BLOCKING);
-
+        UART_Send(UART0, (uint8_t*)str, 1, BLOCKING);
         str++;
     }
+}
+
+void UART0_SendBuffer(uint8_t *buffer, uint32_t size)
+{
+    DMA_SendBuffer(buffer, size);
 }
