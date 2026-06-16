@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 volatile uint8_t servo_angulo = 0;
-volatile ServoModo_t servo_modo = SERVO_MODO_AUTO;
+volatile ServoModo_t servo_modo = SERVO_MODO_MANUAL;
 
 static volatile uint32_t pulso_us = 500;
 static int8_t direccion = 1;
@@ -81,28 +81,16 @@ void servoSetModo(ServoModo_t modo)
         direccion = 1;
 }
 
-void servoTick(uint16_t joystick_raw)
+ServoModo_t servoGetModo(){
+	return servo_modo;
+}
+
+void servoTick(uint16_t adc_value)
 {
     if (servo_modo == SERVO_MODO_MANUAL)
     {
-        int16_t desviacion = (int16_t)joystick_raw - (int16_t)JOYSTICK_CENTRO;
-
-        if (desviacion > (int16_t)JOYSTICK_ZONA_MUERTA)
-        {
-            int16_t paso = desviacion / 400 + 1;
-            int16_t nuevo = (int16_t)servo_angulo + paso;
-            if (nuevo > SERVO_ANGULO_MAX)
-                nuevo = SERVO_ANGULO_MAX;
-            servoSetAngulo((uint8_t)nuevo);
-        }
-        else if (desviacion < -(int16_t)JOYSTICK_ZONA_MUERTA)
-        {
-            int16_t paso = (-desviacion) / 400 + 1;
-            int16_t nuevo = (int16_t)servo_angulo - paso;
-            if (nuevo < SERVO_ANGULO_MIN)
-                nuevo = SERVO_ANGULO_MIN;
-            servoSetAngulo((uint8_t)nuevo);
-        }
+        uint8_t angulo = (adc_value * 180) / 4095;
+        servoSetAngulo(angulo);
     }
 }
 
@@ -121,12 +109,13 @@ void TIMER0_IRQHandler(void)
     {
         TIM_ClearIntPending(LPC_TIM0, TIM_MR0_INT);
         GPIO_SetPinState(PORT_0, PIN_0, 1);
+        cnt_periodos++;
     }
 }
 
 void servoSetAnguloAutomatico()
 {
-    cnt_periodos++;
+
     if (cnt_periodos >= SERVO_PERIODOS_POR_PASO) // cambiar
     {
         cnt_periodos = 0;
