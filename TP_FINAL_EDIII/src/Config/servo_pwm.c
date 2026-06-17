@@ -5,7 +5,7 @@ volatile ServoModo_t servo_modo = SERVO_MODO_MANUAL;
 
 static volatile uint32_t pulso_us = 500;
 static int8_t direccion = 1;
-static uint8_t cnt_periodos = 0;
+// static uint8_t cnt_periodos = 0;
 
 /** @brief Funcion auxiliar para obtener `pulso_us` a partir del `angulo` deseado */
 static uint32_t anguloAPulso(uint8_t angulo)
@@ -121,7 +121,7 @@ void TIMER0_IRQHandler(void)
     {
         TIM_ClearIntPending(LPC_TIM0, TIM_MR0_INT);
         GPIO_SetPinState(PORT_0, PIN_0, 1);
-        cnt_periodos++;
+        // cnt_periodos++;
     }
 }
 
@@ -129,25 +129,25 @@ void TIMER0_IRQHandler(void)
 void Servo_SetAnguloAutomatico()
 {
 
-    if (cnt_periodos >= SERVO_PERIODOS_POR_PASO) // cambiar
+    // if (cnt_periodos >= SERVO_PERIODOS_POR_PASO) // cambiar
+    // {
+    //     cnt_periodos = 0;
+
+    int16_t nuevo = (int16_t)servo_angulo + (int16_t)(direccion * SERVO_PASO_AUTO);
+
+    if (nuevo >= (int16_t)SERVO_ANGULO_MAX)
     {
-        cnt_periodos = 0;
-
-        int16_t nuevo = (int16_t)servo_angulo + (int16_t)(direccion * SERVO_PASO_AUTO);
-
-        if (nuevo >= (int16_t)SERVO_ANGULO_MAX)
-        {
-            nuevo = SERVO_ANGULO_MAX;
-            direccion = -1;
-        }
-        else if (nuevo <= (int16_t)SERVO_ANGULO_MIN)
-        {
-            nuevo = SERVO_ANGULO_MIN;
-            direccion = 1;
-        }
-
-        servo_angulo = (uint8_t)nuevo;
-        pulso_us = anguloAPulso((uint8_t)nuevo);
-        LPC_TIM0->MR1 = pulso_us;
+        nuevo = SERVO_ANGULO_MAX;
+        direccion = -1;
     }
+    else if (nuevo <= (int16_t)SERVO_ANGULO_MIN)
+    {
+        nuevo = SERVO_ANGULO_MIN;
+        direccion = 1;
+    }
+
+    servo_angulo = (uint8_t)nuevo;
+    pulso_us = anguloAPulso((uint8_t)nuevo);
+    LPC_TIM0->MR1 = pulso_us;
+    // }
 }
