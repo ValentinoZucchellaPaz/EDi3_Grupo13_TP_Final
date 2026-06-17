@@ -34,6 +34,6 @@ void DAC_SetDistance(uint16_t distance)
         GPIO_SetPinState(PORT_0, PIN_1, 0);
 
     // Onda DAC - Osciloscopio
-    dac_value = ((distance * 1023) / 500); // chequear esto
+    dac_value = (((500 - distance) * 1023) / 500);
     DAC_UpdateValue(dac_value);
 }
