@@ -1,6 +1,4 @@
 #include "servo_pwm.h"
-#include "LPC17xx.h"
-#include <stdint.h>
 
 volatile uint8_t servo_angulo = 0;
 volatile ServoModo_t servo_modo = SERVO_MODO_MANUAL;
@@ -9,15 +7,15 @@ static volatile uint32_t pulso_us = 500;
 static int8_t direccion = 1;
 static uint8_t cnt_periodos = 0;
 
+/** @brief Funcion auxiliar para obtener `pulso_us` a partir del `angulo` deseado */
 static uint32_t anguloAPulso(uint8_t angulo)
 {
     return SERVO_MIN_US + ((uint32_t)angulo * (SERVO_MAX_US - SERVO_MIN_US)) / 180UL;
 }
 
+/** @brief PWM con periodo 20ms y high_time `pulso_us` (va desde 0.5ms a 2.5ms, segun datasheet de servo SG90) */
 void Servo_ConfigTimerPWM(void)
 {
-    // PWM periodo 20ms y high_time pulso_us (va desde 0.5ms a 2.5ms, datasheet servo SG90)
-
     // config pin P0.0 como salida gpio
     GPIO_SetDir(PORT_0, (1 << 0), GPIO_OUTPUT);
     GPIO_SetPinState(PORT_0, PIN_0, DISABLE);
@@ -55,6 +53,7 @@ void Servo_ConfigTimerPWM(void)
     TIM_Enable(LPC_TIM0);
 }
 
+/** @brief Cambia el high_time (`pulso_us`) del PWM del servo para llevarlo al `angulo` deseado (de 0° a 180°) */
 void Servo_SetAngulo(uint8_t angulo)
 {
     if (angulo > SERVO_ANGULO_MAX)
@@ -70,23 +69,34 @@ void Servo_SetAngulo(uint8_t angulo)
     LPC_TIM0->MR1 = pulso_us;
 }
 
+/** @return `servo_angulo`*/
 uint8_t Servo_GetAngulo()
 {
     return servo_angulo;
 }
 
+/** @brief Cambia `servo_modo` y enciende o apaga el led verde indicador de este (P3.25) */
 void Servo_SetModo(ServoModo_t modo)
 {
     servo_modo = modo;
     if (modo == SERVO_MODO_AUTO)
+    {
         direccion = 1;
+        LPC_GPIO3->FIOSET = (1 << 25);
+    }
+    if (modo == SERVO_MODO_MANUAL)
+    {
+        LPC_GPIO3->FIOCLR = (1 << 25); // enciendo led en modo manual
+    }
 }
 
+/** @return `servo_modo`*/
 ServoModo_t Servo_GetModo(void)
 {
     return servo_modo;
 }
 
+/** @brief Cambia `servo_angulo` en modo manual con el valor de adc pasado*/
 void Servo_Tick(uint16_t adc_value)
 {
     if (servo_modo == SERVO_MODO_MANUAL)
@@ -115,6 +125,7 @@ void TIMER0_IRQHandler(void)
     }
 }
 
+/** @brief Cambia el angulo del servo con incremento fijo teniendo en cuenta direccion */
 void Servo_SetAnguloAutomatico()
 {
 

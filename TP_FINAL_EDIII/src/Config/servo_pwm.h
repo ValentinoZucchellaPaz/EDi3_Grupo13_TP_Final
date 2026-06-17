@@ -1,6 +1,7 @@
 #ifndef SERVO_PWM_H
 #define SERVO_PWM_H
 
+#include "LPC17xx.h"
 #include "lpc17xx_timer.h"
 #include "lpc17xx_pinsel.h"
 #include "lpc17xx_gpio.h"
