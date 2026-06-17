@@ -1,4 +1,5 @@
 # 🎯 RADAR ULTRASÓNICO INTELIGENTE CON SONAR ACÚSTICO
+
 ## Descripción Completa del Proyecto
 
 ---
@@ -12,37 +13,48 @@ Diseñar e implementar un **sistema de radar ultrasónico inteligente** que util
 ## 🔧 COMPONENTES HARDWARE
 
 ### **Sensor de Entrada**
+
 - **HC-SR04** (Sensor ultrasónico)
   - Rango: 2 cm - 400 cm
   - Precisión: ±3 cm
   - Frecuencia: 40 kHz
   - Pines: TRIG (disparo), ECHO (lectura)
 
-- **Joystick analógico**
-  - Eje X: Control manual de ángulo (0-4095 cuentas ADC)
+- **Potenciometro**
+  - Control manual de ángulo (0-4095 cuentas ADC)
   - Zona muerta: ±400 cuentas (previene ruido)
 
 ### **Actuadores de Salida**
+
 - **Servomotor SG90**
   - Rango: 0° a 180°
   - Voltaje: 5V
   - Control: PWM 50Hz (20ms período)
   - Resolución: 0.5ms/10µs por grado
 
-- **Buzzer** (controlado por DAC)
+- **Buzzer**
   - Suena al detectar objetos muy proximos al radar
 
+- **Osciloscopio con DAC**
+  - Sacamos una señal equivalente a la distancia medida por el DAC y visualizamos con un osciloscopio (mas cerca mayor es la señal).
+  - Mejor visualizacion con modo manual.
+
 ### **Indicadores Visuales**
-- **LED en P0.22**: Indicador de proximidad (<20 cm = encendido)
+
+- **LED rojo en P0.22**: Indicador de proximidad (<20 cm = encendido)
+- **LED verde en P3.25**: Indicador de modo manual
 
 ### **Comunicación**
+
 - **UART0**: 115200 baud, interfaz con PC
 - **DMA Channel 0**: Transmisión eficiente de buffers sin intervención CPU
+- **Interrupcion de UART**: recibimos datos de la compu mediante interrupciones, segun el caracter mandado cambiamos el modo
 
 ### **Microcontrolador**
+
 - **LPC1768** (ARM Cortex-M3)
-- **Timers**: Timer0 (servo PWM), Timer1 (TRIGGER), Timer2 (ECHO Capture)
-- **ADC**: 12-bit a 200kHz (joystick)
+- **Timers**: Timer0 (servo PWM), Timer1 (TRIGGER), Timer2 (ECHO -> Capture)
+- **ADC**: 12-bit a 200kHz (potenciometro)
 - **DAC**: 10-bit (buzzer sonar)
 
 ---
@@ -59,9 +71,9 @@ Diseñar e implementar un **sistema de radar ultrasónico inteligente** que util
 │  Ultrasónico │          │  Manual/Auto │          │   Sonar      │
 └──────┬───────┘          └──────┬───────┘          └──────┬───────┘
        │                         │                         │
-       ├─ ECHO (P0.4)            ├─ ADC (P0.23)            └─ DAC (P0.26)
-       │  TIMER2 CAPTURE         │  ADC_CH0                   (Buzzer)
-       │  Mide pulso (µs)        │  Joystick X-axis
+       ├─ ECHO (P0.4)            ├─ ADC (P0.23)            ├─ DAC (P0.26)
+       │  TIMER2 CAPTURE         │  ADC_CH0                |  (Osciloscopio)
+       │  Mide pulso (µs)        │  Potenciometro          └─ Buzzer (P0.1)
        │  ↓ Calcula distancia    │  ↓ Convierte a ángulo
        │  (high_time / 58)       │  (val * 180 / 4095)
        │
@@ -79,18 +91,18 @@ Diseñar e implementar un **sistema de radar ultrasónico inteligente** que util
                                           │
                         ┌─────────────────┼─────────────────┐
                         │                 │                 │
-                   ┌────▼─────┐    ┌─────▼──────┐    ┌─────▼──────┐
+                   ┌────▼──────┐    ┌─────▼──────┐    ┌─────▼──────┐
                    │ Buffer A  │    │  Buffer B  │    │   DAC      │
                    │ (25x4B)   │    │  (25x4B)   │    │  (Sonar)   │
                    └────┬──────┘    └────┬───────┘    └─────┬──────┘
                         │                │                  │
-                   ┌────▼────────────────▼──┐          ┌────▼─────┐
-                   │  Servo PWM              │          │  Buzzer  │
-                   │  TIMER0 (P0.0)          │          │  Acústico│
+                   ┌────▼────────────────▼───┐          ┌───▼──────┐
+                   │  Servo PWM              │          │ Buzzer   │
+                   │  TIMER0 (P0.0)          │          │ Oscilosc │
                    │  20ms, 500-2500µs       │          └──────────┘
                    └────┬────────────────┬───┘
                         │                │
-                   ┌────▼────┐      ┌───▼─────┐
+                   ┌────▼─────┐      ┌───▼─────┐
                    │  Servo   │      │   PC    │
                    │  Motor   │      │  UART0  │
                    │  Gira    │      │  DMA    │
@@ -101,7 +113,7 @@ Diseñar e implementar un **sistema de radar ultrasónico inteligente** que util
                    ┌────▼──────────────────▼────┐
                    │   Barrido e imagen radar   │
                    │   en pantalla de PC        │
-                   └───────────────────────────┘
+                   └────────────────────────────┘
 ```
 
 ---
@@ -109,22 +121,24 @@ Diseñar e implementar un **sistema de radar ultrasónico inteligente** que util
 ## ⚙️ MODOS DE FUNCIONAMIENTO
 
 ### **Modo AUTOMÁTICO**
+
 - **Activación**: Enviar comando 'A' por UART desde PC
-- **Comportamiento**: 
+- **Comportamiento**:
   - Servo realiza barrido continuo: 0° → 180° → 0°
-  - Avanza 2° cada 60 ms (SERVO_PASO_AUTO = 2, SERVO_PERIODOS_POR_PASO = 3)
+  - Avanza 2° cada 60 ms.
   - Recorre 180° en ~5.4 segundos
-- **Captura de datos**: 
+- **Captura de datos**:
   - Se adquieren muestras continuamente: {ángulo, distancia}
   - Cada 25 muestras se envían al PC mediante DMA
 - **Aplicación**: Reconstrucción de imagen radar en tiempo real en la PC
 
 ### **Modo MANUAL**
+
 - **Activación**: Enviar comando 'M' por UART desde PC
-- **Control**: Joystick analógico (eje X)
+- **Control**: Potenciometro
   - Rango ADC: 0-4095 cuentas
   - Mapeo: ángulo = (ADC_value × 180) / 4095
-  - Centro: ~2048 (zona muerta ±400)
+  - Centro: ~2048
 - **Libertad**: Usuario controla completamente la orientación del radar
 - **Captura**: Continúa adquiriendo datos mientras controla
 - **Aplicación**: Inspección manual de áreas de interés
@@ -160,14 +174,15 @@ Diseñar e implementar un **sistema de radar ultrasónico inteligente** que util
 ```
 1. distance = Ultrasonic_GetDistance()
    └─ Lee valor calculado en TIMER2_IRQHandler
-   
+
 2. angulo_servo = Servo_GetAngulo()
    └─ Obtiene ángulo actual (0-180°)
-   
+
 3. DAC_SetDistance(distance)
-   ├─ Prende/apaga LED proximidad (si < 20cm)
-   └─ Actualiza valor DAC para buzzer sonar
-   
+   ├─ Prende/apaga LED rojo proximidad (si < 20cm)
+   ├─ Prende/apaga buzzer de proximidad (si < 5cm)
+   └─ Actualiza valor DAC para señal osciloscopio
+
 4. Si MODO_AUTO:
    │  └─ Servo_SetAnguloAutomatico()
    │     └─ Incrementa ángulo 2° cada 60ms
@@ -177,12 +192,12 @@ Diseñar e implementar un **sistema de radar ultrasónico inteligente** que util
       ├─ Servo_Tick(adc)
       │  └─ Convierte ADC a ángulo
       └─ Imprime DEBUG (ADC vs ANGULO)
-   
+
 5. Guardar muestra en buffer actual
    ├─ radar_bufferA o radar_bufferB
    ├─ Estructura: {angulo, distancia}
    └─ idx++
-   
+
 6. Si idx == 25 (buffer completo):
    ├─ Cambia flag_buffer (A↔B)
    ├─ UART0_SendBuffer(buffer, sizeof)
@@ -194,35 +209,40 @@ Diseñar e implementar un **sistema de radar ultrasónico inteligente** que util
 ### **3. Interrupciones**
 
 #### **TIMER1_IRQHandler** (Cada 60ms)
+
 ```
 Match 0 @ 10µs:  GPIO P0.18 = 0  (Baja TRIG)
 Match 1 @ 60ms:  GPIO P0.18 = 1  (Sube TRIG, inicia nuevo ciclo)
 ```
 
 #### **TIMER2_IRQHandler** (Rising/Falling edge en ECHO)
+
 ```
 Rising edge:  start_pulse = Timer2_Count
 Falling edge: end_pulse = Timer2_Count
               high_time = end_pulse - start_pulse
               distance_cm = high_time / 58
-              
+
               Maneja overflow (si end_pulse < start_pulse):
               high_time = (0xFFFFFFFF - start_pulse) + end_pulse
 ```
 
 #### **TIMER0_IRQHandler** (Cada 20ms - Servo PWM)
+
 ```
 Match 1 @ pulso_us:  GPIO P0.0 = 0  (Baja PWM)
 Match 0 @ 20ms:      GPIO P0.0 = 1  (Sube PWM, nuevo ciclo)
 ```
 
 #### **UART0_IRQHandler** (Comando recibido)
+
 ```
 Si dato == 'A':  Servo_SetModo(SERVO_MODO_AUTO)
 Si dato == 'M':  Servo_SetModo(SERVO_MODO_MANUAL)
 ```
 
 #### **DMA_IRQHandler** (Transmisión completada)
+
 ```
 Si TC (Transfer Complete):  dma_busy = 0
 Si ERR (Error):            dma_busy = 0
@@ -308,11 +328,11 @@ Secuencia:
 
 ### **Timers y Presiciones**
 
-| Timer | Propósito | Presición | Período | Función |
-|-------|-----------|-----------|---------|---------|
-| **Timer1** | TRIGGER PWM | 1 µs | 60 ms | Dispara sensor c/60ms |
-| **Timer2** | ECHO Capture | 1 µs | N/A | Mide tiempo de pulso |
-| **Timer0** | Servo PWM | 1 µs | 20 ms | Genera 50Hz para servo |
+| Timer      | Propósito    | Presición | Período | Función                |
+| ---------- | ------------ | --------- | ------- | ---------------------- |
+| **Timer1** | TRIGGER PWM  | 1 µs      | 60 ms   | Dispara sensor c/60ms  |
+| **Timer2** | ECHO Capture | 1 µs      | N/A     | Mide tiempo de pulso   |
+| **Timer0** | Servo PWM    | 1 µs      | 20 ms   | Genera 50Hz para servo |
 
 ### **ADC (Joystick)**
 
@@ -399,7 +419,7 @@ Ciclo de medición (cada 60 ms):
 2. Sensor HC-SR04 responde
    └─ Emite pulso ultrasónico (40 kHz)
 
-3. Sonido viaja 
+3. Sonido viaja
    ├─ Distancia desconocida en ambas direcciones
    └─ Tiempo = 2 × Distancia / Velocidad_Sonido
 
@@ -427,6 +447,7 @@ Objeto a 50 cm:
 ## 🎯 CASOS DE USO
 
 ### **Caso 1: Inspección de sala (Modo Automático)**
+
 ```
 1. PC envía 'A'
 2. Servo barre 0° → 180° → 0° continuamente
@@ -437,6 +458,7 @@ Objeto a 50 cm:
 ```
 
 ### **Caso 2: Inspección puntual (Modo Manual)**
+
 ```
 1. PC envía 'M'
 2. Usuario mueve joystick
@@ -447,11 +469,12 @@ Objeto a 50 cm:
 ```
 
 ### **Caso 3: Detección de proximidad**
+
 ```
 1. Objeto se acerca a radar
 2. Distancia disminuye (ej: 100cm → 50cm → 10cm)
 3. DAC aumenta voltaje (0 → 512 → 1023)
-4. Buzzer emite sonido 
+4. Buzzer emite sonido
 5. LED P0.22 se enciende (<20cm)
 6. Usuario recibe feedback acústico-visual
 ```

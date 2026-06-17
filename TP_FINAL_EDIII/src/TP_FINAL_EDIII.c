@@ -36,7 +36,7 @@ int main(void)
     DAC_Config();
     ADC_Config();
     UART0_Config();
-    configTimerPWM(); // servo
+    Servo_ConfigTimerPWM(); // servo
 
     uint16_t idx = 0;
     uint16_t angulo_servo = 0;
@@ -46,7 +46,7 @@ int main(void)
     {
         // UART0_SendString("ENTRE LOOP\r\n");
         distance = Ultrasonic_GetDistance();
-        angulo_servo = servoGetAngulo();
+        angulo_servo = Servo_GetAngulo();
         // UART0_SendString("SALI DISTANCE\r\n");
 
         DAC_SetDistance(distance); // CAMBIAR ESTO (NO LO DEBERIA HACER EN DAC_CONFIG, POR EL DAC DEBO SACAR VALOR REAL A OSCILOSCOPIO )

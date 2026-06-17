@@ -39,14 +39,13 @@ extern volatile uint8_t servo_angulo; // 0 a 180
 extern volatile ServoModo_t servo_modo;
 
 // ── API pública ──────────────────────────────────────────
+
 void Servo_ConfigTimerPWM(void);
 void Servo_SetAngulo(uint8_t angulo);
 void Servo_SetModo(ServoModo_t modo);
 ServoModo_t Servo_GetModo(void);
 uint8_t Servo_GetAngulo();
 void Servo_SetAnguloAutomatico();
-
-// Llamar desde SysTick cada 50ms
-void Servo_Tick(uint16_t joystick_raw); // LLAMAR SOLO EN MODO MANUAL
+void Servo_Tick(uint16_t adc_value); // LLAMAR SOLO EN MODO MANUAL
 
 #endif
