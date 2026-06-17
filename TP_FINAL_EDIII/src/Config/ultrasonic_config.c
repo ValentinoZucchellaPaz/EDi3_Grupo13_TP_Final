@@ -78,8 +78,8 @@ void TIMER1_IRQHandler()
     {
         TIM_ClearIntPending(LPC_TIM1, TIM_MR1_INT);
         GPIO_SetPinState(PORT_0, PIN_18, 1);
-        if (distance_cm == -1)
-            distance_cm = 450;
+        if (distance_cm == -1 || distance_cm >= 500)
+            distance_cm = 500;
         flag60_ms = 1;
     }
 }
