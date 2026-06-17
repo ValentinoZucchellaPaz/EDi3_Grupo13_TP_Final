@@ -84,12 +84,12 @@ int main(void)
         {
         	if(flag_buffer){
         		flag_buffer = 0;
-        		UART0_SendString("MANDO BUFFER A\r\n");
+        		//UART0_SendString("MANDO BUFFER A\r\n");
         		UART0_SendBuffer((uint8_t*)radar_bufferA,sizeof(radar_bufferA));
 
         	}else{
         		flag_buffer = 1;
-        		UART0_SendString("MANDO BUFFER B\r\n");
+        		//UART0_SendString("MANDO BUFFER B\r\n");
         		UART0_SendBuffer((uint8_t*)radar_bufferB,sizeof(radar_bufferB));
         	}
 

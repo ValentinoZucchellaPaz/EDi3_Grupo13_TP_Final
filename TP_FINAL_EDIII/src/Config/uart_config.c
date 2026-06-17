@@ -1,5 +1,7 @@
 #include "uart_config.h"
 
+volatile uint8_t uart_rx_cmd = 0;
+
 void UART0_Config(void)
 {
     UART_PinConfig(UART_TX0_P0_2);
@@ -25,6 +27,8 @@ void UART0_Config(void)
     UART_FIFOConfig(UART0, &fifoCfg);
     UART_TxEnable(UART0);
 
+    UART_IntConfig(UART0, UART_INT_RBR, ENABLE); //Habilita interrupciones por UART
+    NVIC_EnableIRQ(UART0_IRQn); 
     DMA_Init();
 }
 
@@ -40,4 +44,28 @@ void UART0_SendString(char *str)
 void UART0_SendBuffer(uint8_t *buffer, uint32_t size)
 {
     DMA_SendBuffer(buffer, size);
+}
+
+void UART0_IRQHandler(void)
+{
+    uint8_t dato;
+
+    if(UART_Receive(UART0,&dato,1,NONE_BLOCKING))
+    {
+        uart_rx_cmd = dato;
+    }
+
+    switch (dato)
+    {
+    case 'A':
+        servoSetModo(SERVO_MODO_AUTO);
+        break;
+        
+    case 'M':
+        servoSetModo(SERVO_MODO_MANUAL);
+        break;
+
+    default:
+        break;
+    }
 }
