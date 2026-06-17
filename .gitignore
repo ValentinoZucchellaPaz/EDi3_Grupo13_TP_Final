@@ -16,6 +16,7 @@ mcu_run/.mcuxpressoide_packages_support
 documentacion placa/
 *.pdf
 *.txt
+!requirements.txt
 *.ppt
 *.pptx
 *.odp
@@ -30,3 +31,14 @@ documentacion placa/
 *.o
 *.d
 *.a
+
+# Python virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# IDEs (opcional)
+.vscode/
+.idea/
