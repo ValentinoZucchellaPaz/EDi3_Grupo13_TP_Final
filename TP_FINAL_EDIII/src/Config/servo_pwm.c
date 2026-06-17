@@ -14,7 +14,7 @@ static uint32_t anguloAPulso(uint8_t angulo)
     return SERVO_MIN_US + ((uint32_t)angulo * (SERVO_MAX_US - SERVO_MIN_US)) / 180UL;
 }
 
-void configTimerPWM(void)
+void Servo_ConfigTimerPWM(void)
 {
     // PWM periodo 20ms y high_time pulso_us (va desde 0.5ms a 2.5ms, datasheet servo SG90)
 
@@ -55,7 +55,7 @@ void configTimerPWM(void)
     TIM_Enable(LPC_TIM0);
 }
 
-void servoSetAngulo(uint8_t angulo)
+void Servo_SetAngulo(uint8_t angulo)
 {
     if (angulo > SERVO_ANGULO_MAX)
         angulo = SERVO_ANGULO_MAX;
@@ -70,27 +70,29 @@ void servoSetAngulo(uint8_t angulo)
     LPC_TIM0->MR1 = pulso_us;
 }
 
-uint8_t servoGetAngulo(){
-	return servo_angulo;
+uint8_t Servo_GetAngulo()
+{
+    return servo_angulo;
 }
 
-void servoSetModo(ServoModo_t modo)
+void Servo_SetModo(ServoModo_t modo)
 {
     servo_modo = modo;
     if (modo == SERVO_MODO_AUTO)
         direccion = 1;
 }
 
-ServoModo_t servoGetModo(){
-	return servo_modo;
+ServoModo_t Servo_GetModo(void)
+{
+    return servo_modo;
 }
 
-void servoTick(uint16_t adc_value)
+void Servo_Tick(uint16_t adc_value)
 {
     if (servo_modo == SERVO_MODO_MANUAL)
     {
         uint8_t angulo = (adc_value * 180) / 4095;
-        servoSetAngulo(angulo);
+        Servo_SetAngulo(angulo);
     }
 }
 
@@ -113,7 +115,7 @@ void TIMER0_IRQHandler(void)
     }
 }
 
-void servoSetAnguloAutomatico()
+void Servo_SetAnguloAutomatico()
 {
 
     if (cnt_periodos >= SERVO_PERIODOS_POR_PASO) // cambiar

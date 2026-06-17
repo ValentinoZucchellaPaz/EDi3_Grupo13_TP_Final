@@ -22,7 +22,7 @@ typedef struct
 radar_sample_t radar_bufferA[BUFFER_SIZE];
 radar_sample_t radar_bufferB[BUFFER_SIZE];
 
-volatile uint8_t flag_buffer = 1; //comienza con buffer A
+volatile uint8_t flag_buffer = 1; // comienza con buffer A
 
 int main(void)
 {
@@ -36,9 +36,7 @@ int main(void)
     DAC_Config();
     ADC_Config();
     UART0_Config();
-    configTimerPWM(); //servo
-
-
+    configTimerPWM(); // servo
 
     uint16_t idx = 0;
     uint16_t angulo_servo = 0;
@@ -46,58 +44,61 @@ int main(void)
 
     while (1)
     {
-       //UART0_SendString("ENTRE LOOP\r\n");
-       distance = Ultrasonic_GetDistance();
-       angulo_servo = servoGetAngulo();
-       //UART0_SendString("SALI DISTANCE\r\n");
-       
-       DAC_SetDistance(distance);	// CAMBIAR ESTO (NO LO DEBERIA HACER EN DAC_CONFIG, POR EL DAC DEBO SACAR VALOR REAL A OSCILOSCOPIO )
+        // UART0_SendString("ENTRE LOOP\r\n");
+        distance = Ultrasonic_GetDistance();
+        angulo_servo = servoGetAngulo();
+        // UART0_SendString("SALI DISTANCE\r\n");
 
-       if (servoGetModo() == SERVO_MODO_AUTO)
-       {
-           servoSetAnguloAutomatico();
-       }
-       else
-       {
-           uint16_t adc = ADC_Read();
-           servoTick(adc);
+        DAC_SetDistance(distance); // CAMBIAR ESTO (NO LO DEBERIA HACER EN DAC_CONFIG, POR EL DAC DEBO SACAR VALOR REAL A OSCILOSCOPIO )
 
-           // DEBUG: ver qué está leyendo el ADC
-           char buf[40];
-           sprintf(buf, "ADC: %u  ANGULO: %u\r\n", adc, servoGetAngulo());
-           UART0_SendString(buf);
-       }
+        if (Servo_GetModo() == SERVO_MODO_AUTO)
+        {
+            Servo_SetAnguloAutomatico();
+        }
+        else
+        {
+            uint16_t adc = ADC_Read();
+            Servo_Tick(adc);
+
+            // DEBUG: ver qué está leyendo el ADC
+            char buf[40];
+            sprintf(buf, "ADC: %u  ANGULO: %u\r\n", adc, Servo_GetAngulo());
+            UART0_SendString(buf);
+        }
 
         // Guardar muestra en buffer
-       if(flag_buffer){
-    	   radar_bufferA[idx].angulo = angulo_servo;
-    	   radar_bufferA[idx].distancia = distance;
-       }else{
-    	   radar_bufferB[idx].angulo = angulo_servo;
-    	   radar_bufferB[idx].distancia = distance;
-       }
+        if (flag_buffer)
+        {
+            radar_bufferA[idx].angulo = angulo_servo;
+            radar_bufferA[idx].distancia = distance;
+        }
+        else
+        {
+            radar_bufferB[idx].angulo = angulo_servo;
+            radar_bufferB[idx].distancia = distance;
+        }
 
         idx++;
 
-
         if (idx == BUFFER_SIZE)
         {
-        	if(flag_buffer){
-        		flag_buffer = 0;
-        		//UART0_SendString("MANDO BUFFER A\r\n");
-        		UART0_SendBuffer((uint8_t*)radar_bufferA,sizeof(radar_bufferA));
-
-        	}else{
-        		flag_buffer = 1;
-        		//UART0_SendString("MANDO BUFFER B\r\n");
-        		UART0_SendBuffer((uint8_t*)radar_bufferB,sizeof(radar_bufferB));
-        	}
-
+            if (flag_buffer)
+            {
+                flag_buffer = 0;
+                // UART0_SendString("MANDO BUFFER A\r\n");
+                UART0_SendBuffer((uint8_t *)radar_bufferA, sizeof(radar_bufferA));
+            }
+            else
+            {
+                flag_buffer = 1;
+                // UART0_SendString("MANDO BUFFER B\r\n");
+                UART0_SendBuffer((uint8_t *)radar_bufferB, sizeof(radar_bufferB));
+            }
 
             idx = 0;
 
             // delay para no saturar
-            //for (volatile int i = 0; i < 5000000; i++);
+            // for (volatile int i = 0; i < 5000000; i++);
         }
     }
 
