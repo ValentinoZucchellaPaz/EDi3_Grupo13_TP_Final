@@ -53,19 +53,19 @@ void UART0_IRQHandler(void)
     if(UART_Receive(UART0,&dato,1,NONE_BLOCKING))
     {
         uart_rx_cmd = dato;
-    }
 
-    switch (dato)
-    {
-    case 'A':
-        servoSetModo(SERVO_MODO_AUTO);
-        break;
-        
-    case 'M':
-        servoSetModo(SERVO_MODO_MANUAL);
-        break;
+        switch (dato)
+        {
+        case 'A':
+            servoSetModo(SERVO_MODO_AUTO);
+            break;
 
-    default:
-        break;
+        case 'M':
+            servoSetModo(SERVO_MODO_MANUAL);
+            break;
+
+        default:
+            break;
+        }
     }
 }
