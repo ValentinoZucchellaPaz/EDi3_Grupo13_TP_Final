@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#define BUFFER_SIZE 25
+#define BUFFER_SIZE 90
 
 typedef struct
 {
@@ -26,9 +26,15 @@ volatile uint8_t flag_buffer = 1; // comienza con buffer A
 
 int main(void)
 {
+	// config led de proximidad
     GPIO_SetDir(PORT_0, 1 << 22, GPIO_OUTPUT);
     GPIO_SetPinState(PORT_0, PIN_22, 1);
 
+    // config led de modo
+    GPIO_SetDir(PORT_3, 1 << 25, GPIO_OUTPUT);
+	GPIO_SetPinState(PORT_3, PIN_25, 1);
+
+	// config pin de buzzer
     GPIO_SetDir(PORT_0, 1 << 1, GPIO_OUTPUT);
     GPIO_SetPinState(PORT_0, PIN_1, 0);
 
@@ -61,9 +67,9 @@ int main(void)
             Servo_Tick(adc);
 
             // DEBUG: ver qué está leyendo el ADC
-            char buf[40];
-            sprintf(buf, "ADC: %u  ANGULO: %u\r\n", adc, Servo_GetAngulo());
-            UART0_SendString(buf);
+            //char buf[40];
+            //sprintf(buf, "ADC: %u  ANGULO: %u\r\n", adc, Servo_GetAngulo());
+            //UART0_SendString(buf);
         }
 
         // Guardar muestra en buffer
@@ -85,13 +91,13 @@ int main(void)
             if (flag_buffer)
             {
                 flag_buffer = 0;
-                // UART0_SendString("MANDO BUFFER A\r\n");
+                //UART0_SendString("MANDO BUFFER A\r\n");
                 UART0_SendBuffer((uint8_t *)radar_bufferA, sizeof(radar_bufferA));
             }
             else
             {
                 flag_buffer = 1;
-                // UART0_SendString("MANDO BUFFER B\r\n");
+                //UART0_SendString("MANDO BUFFER B\r\n");
                 UART0_SendBuffer((uint8_t *)radar_bufferB, sizeof(radar_bufferB));
             }
 

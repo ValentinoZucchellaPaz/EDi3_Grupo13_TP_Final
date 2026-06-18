@@ -1,7 +1,7 @@
 #include "servo_pwm.h"
 
 volatile uint8_t servo_angulo = 0;
-volatile ServoModo_t servo_modo = SERVO_MODO_MANUAL;
+volatile ServoModo_t servo_modo = SERVO_MODO_AUTO;
 
 static volatile uint32_t pulso_us = 500;
 static int8_t direccion = 1;
@@ -101,7 +101,7 @@ void Servo_Tick(uint16_t adc_value)
 {
     if (servo_modo == SERVO_MODO_MANUAL)
     {
-        uint8_t angulo = (adc_value * 180) / 4095;
+        uint8_t angulo = (adc_value * 180) / 4095; // ver esto q no suba cualquier cosa
         Servo_SetAngulo(angulo);
     }
 }

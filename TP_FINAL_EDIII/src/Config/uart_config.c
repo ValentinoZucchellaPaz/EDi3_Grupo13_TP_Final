@@ -1,6 +1,7 @@
 #include "uart_config.h"
 
 volatile uint8_t uart_rx_cmd = 0;
+static uint8_t header[2] = {0xAA, 0x55};
 
 void UART0_Config(void)
 {
@@ -41,6 +42,7 @@ void UART0_SendString(char *str)
 
 void UART0_SendBuffer(uint8_t *buffer, uint32_t size)
 {
+    UART_Send(UART0, header, 2, BLOCKING);
     DMA_SendBuffer(buffer, size);
 }
 
