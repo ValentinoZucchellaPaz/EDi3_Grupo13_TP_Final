@@ -91,6 +91,13 @@ P0.23 → Potenciometro (ADC CH0)
 P0.26 → DAC (osciloscopio)
 P3.25 → LED modo manual (GPIO)
 ```
+## DIAGRAMA CIRCUITAL
+```
+![imagen](./docs/diagrama.png)
+```
+
+
+
 ---
 
 ## ⚡ Características
