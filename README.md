@@ -1,65 +1,183 @@
-## Radar Ultrasónico con Modo Manual, Automático y Sonar Acústico
+# 🎯 RADAR ULTRASÓNICO 180° CON CONTROL DUAL
 
-El trabajo consta de un **sensor de distancia acoplado encima de un servo motor**, de esta manera se realiza un barrido 180° y se **mandan las mediciones de distancia a la computadora mediante UART**.
+## 📝 Descripción
 
-En la computadora se **reconstruye la imagen con los datos y se controla el modo** de funcionamiento: automatico o manual.
+Sistema embebido que captura datos de un **sensor ultrasónico HC-SR04** montado en un **servomotor** para realizar barridos de 180°. Ofrece control **automático** (desde PC) o **manual** (potenciometro), captura datos en tiempo real y transmite por UART a una interfaz gráfica. Incluye retroalimentación acústica (buzzer) y visual (LEDs).
 
-El modo manual va a usar un modulo joystick (analogico y convierto con ADC) para manejar el movimiento del servo (barrido)
+---
 
-Ademas de todo lo anterior, las mediciones del sensor se enviarán al DAC, el cual va a transformar eso en analogico y alimentar un buzzer, de manera que cuando se detecte un objeto se tendrá un sonido similar al de un sonar.
+## 🔧 Hardware
 
-### Sensor
+### Entradas
+- **HC-SR04**: Sensor ultrasónico (rango 2-450cm, precisión ±3cm)
+- **Potenciometro**: Control manual (ADC 0-4095 cuentas)
 
-- Sensor ultrasónico HC-SR04 montado sobre un servomotor.
-- Módulo joystick analógico para control manual.
+### Salidas
+- **SG90**: Servomotor (0°-180°, PWM 50Hz)
+- **Buzzer**: Retroalimentación acústica (DAC 10-bit)
+- **LEDs**: P0.22 (proximidad <20cm), P3.25 (modo manual)
+- **Osciloscopio**: Visualización DAC de distancia
 
-### Actuador
+### Microcontrolador
+- **LPC1768** (ARM Cortex-M3)
+- **Timers**: T0 (servo PWM 20ms), T1 (trigger 60ms), T2 (eco capture)
+- **ADC**: 200kHz, 12-bit | **DAC**: 10-bit
+- **UART**: 115200 baud con DMA
 
-- Servomotor encargado de orientar el radar.
-- Buzzer controlado mediante DAC para generar una respuesta acústica tipo sonar.
+---
 
-### Funcionamiento
+## ⚙️ Modos Operacionales
 
-- El sistema realiza un barrido angular de 180° detectando obstáculos mediante el sensor ultrasónico.
-- Un timer genera la señal PWM utilizada para posicionar el servomotor.
-- La medición de distancia se realiza utilizando entradas Capture e interrupciones.
-- Los datos obtenidos:
-  - ángulo
-  - distancia
-- se almacenan en memoria y son enviados a una computadora mediante UART utilizando DMA
+| Modo | Activación | Comportamiento | Aplicación |
+|------|-----------|----------------|-----------|
+| **AUTO** | Cmd 'A' por UART | Barrido continuo 0°→180°→0° (2°/60ms ≈ 5.4s) | Imagen radar |
+| **MANUAL** | Cmd 'M' por UART | Control con potenciometro, ángulo = ADC×180/4095 | Inspección manual de áreas |
 
-El sistema posee dos modos de funcionamiento seleccionables desde la PC mediante comandos UART:
+**Sonar Acústico** (ambos modos): Distancia mapea a amplitud/frecuencia (distancia <= 5cm | buzzer sonando)
 
-#### Modo Automático
+---
 
-- El servomotor realiza continuamente un barrido automático entre los límites angulares definidos.
-- El sistema transmite en tiempo real las mediciones adquiridas para reconstruir el radar en una interfaz gráfica desarrollada en la PC.
+## 🔄 Flujo de Ejecución
 
-#### Modo Manual
+### Inicialización
+```
+GPIO (LEDs) → Ultrasonic (TIMER1/T2) → DAC → ADC → UART+DMA → Servo (TIMER0)
+```
 
-- El movimiento del radar se controla mediante un joystick analógico.
-- El ADC adquiere continuamente la posición horizontal del joystick.
-- El DMA almacena las muestras del ADC en memoria para minimizar la intervención de CPU.
-- Según la posición detectada:
-  - izquierda → el servo gira hacia la izquierda
-  - derecha → el servo gira hacia la derecha
-- Mientras el usuario controla manualmente el radar, el sistema continúa midiendo distancias y transmitiendo datos hacia la computadora.
+### Loop Principal (cada ~10-20ms)
+```
+1. Lee distancia (TIMER2)
+2. Lee ángulo actual (servo)
+3. Actualiza DAC (buzzer/osciloscopio)
+4. Si modo = AUTO: incrementa ángulo | Si modo = MANUAL: lee ADC
+5. Guarda muestra {ángulo, distancia} en buffer
+6. Si buffer lleno (25 muestras) → envía por UART+DMA
+```
 
-#### Sonar Acústico
+### Interrupciones Clave
+| Timer | Evento | Acción |
+|-------|--------|--------|
+| **T1** | c/60ms | Genera pulso TRIGGER (10µs) |
+| **T2** | Flanco ECHO | Captura high_time → distancia = high_time/58 |
+| **T0** | c/20ms | PWM servo (500-2500µs según ángulo) |
+| **UART** | Dato recibido | 'A'→AUTO, 'M'→MANUAL |
+| **DMA** | TX completo | dma_busy = 0 |
 
-- La distancia detectada por el sensor ultrasónico se utiliza para controlar una señal generada mediante el DAC.
-- La salida analógica del DAC se conecta a un buzzer, generando un efecto acústico similar al de un sonar real.
-- A menor distancia detectada mayor intensidad o frecuencia sonora.
-- A mayor distancia detectada menor intensidad o frecuencia sonora
-- La generación de la señal sonora se realiza utilizando timers y DMA para alimentar continuamente el DAC con una forma de onda almacenada en memoria.
+---
 
-### Periféricos usados
+## 📊 Captura de Datos
 
-✅ ADC  
-✅ DAC  
-✅ DMA  
-✅ Timers  
-✅ PWM (servo)  
-✅ Capture (sensor ultrasónico)  
-✅ UART Full Duplex  
-✅ Interrupciones (ADC, Capture, DMA y UART)
+**Double Buffering**: Mientras Buffer A se transmite por UART, Buffer B se llena con nuevas muestras.
+
+```
+Buffer: [struct {uint16_t angulo, uint16_t distancia}] × 25
+        = 100 bytes/buffer × 2 buffers
+Tx: ~7ms @ 115200 baud
+```
+
+---
+
+## 🔌 Pinout Resumido
+
+```
+P0.0  → Servo PWM (TIMER0)
+P0.1  → Buzzer
+P0.2  → UART TX
+P0.3  → UART RX
+P0.4  → Sensor ECHO (TIMER2 CAP)
+P0.18 → Sensor TRIG (TIMER1)
+P0.22 → LED proximidad (GPIO)
+P0.23 → Potenciometro (ADC CH0)
+P0.26 → DAC (osciloscopio)
+P3.25 → LED modo manual (GPIO)
+```
+---
+
+## ⚡ Características
+
+✅ **Resolución**: 1° angular, ±3cm distancia  
+✅ **Velocidad**: 5.4s/barrido completo  
+✅ **Captura**: 25 muestras/paquete cada 0.5-1s aprox  
+✅ **DMA**: Cero bloqueos en transmisión  
+✅ **Sincronización**: Header 0xAA 0x55 en cada paquete  
+✅ **Retroalimentación**: Sonar acústico + LEDs indicadores  
+
+---
+### **Double Buffering**
+
+```
+Tiempo T0:  ┌─────────────────────────┐
+            │  Llenando Buffer A       │
+            │  idx: 0 → 24             │
+            │  (25 muestras)           │
+            └─────────────┬─────────────┘
+                          │
+Tiempo T1:  ┌─────────────▼─────────────┐
+            │  Buffer A lleno!          │
+            ├─ flag_buffer = 0          │
+            ├─ Envía Buffer A por DMA  │
+            └─────────────┬─────────────┘
+                          │
+Tiempo T1:  ┌─────────────▼─────────────┐
+            │  Llenando Buffer B        │
+            │  idx: 0 → 24              │
+            │  (Mientras A se transmite)│
+            └─────────────┬─────────────┘
+                          │
+Tiempo T2:  ┌─────────────▼─────────────┐
+            │  Buffer B lleno!          │
+            ├─ flag_buffer = 1          │
+            ├─ Envía Buffer B por DMA  │
+            └─────────────┬─────────────┘
+                          │
+Tiempo T2:  ┌─────────────▼─────────────┐
+            │  Llenando Buffer A        │
+            │  (Mientras B se transmite)│
+            └─────────────────────────┘
+
+Ventaja: Nunca pierde datos mientras transmite
+```
+---
+### . Interrupciones**
+
+#### **TIMER1_IRQHandler** (Cada 60ms)
+
+```
+Match 0 @ 10µs:  GPIO P0.18 = 0  (Baja TRIG)
+Match 1 @ 60ms:  GPIO P0.18 = 1  (Sube TRIG, inicia nuevo ciclo)
+```
+
+#### **TIMER2_IRQHandler** (Rising/Falling edge en ECHO)
+
+```
+Rising edge:  start_pulse = Timer2_Count
+Falling edge: end_pulse = Timer2_Count
+              high_time = end_pulse - start_pulse
+              distance_cm = high_time / 58
+
+              Maneja overflow (si end_pulse < start_pulse):
+              high_time = (0xFFFFFFFF - start_pulse) + end_pulse
+```
+
+#### **TIMER0_IRQHandler** (Cada 20ms - Servo PWM)
+
+```
+Match 1 @ pulso_us:  GPIO P0.0 = 0  (Baja PWM)
+Match 0 @ 20ms:      GPIO P0.0 = 1  (Sube PWM, nuevo ciclo)
+```
+
+#### **UART0_IRQHandler** (Comando recibido)
+
+```
+Si dato == 'A':  Servo_SetModo(SERVO_MODO_AUTO)
+Si dato == 'M':  Servo_SetModo(SERVO_MODO_MANUAL)
+```
+
+#### **DMA_IRQHandler** (Transmisión completada)
+
+```
+Si TC (Transfer Complete):  dma_busy = 0
+Si ERR (Error):            dma_busy = 0
+---
+```
+**Grupo 13 - Electrónica Digital III - TP Final 2026**

@@ -4,6 +4,17 @@
 #include "lpc17xx_gpio.h"
 
 // ---------------------------------------------------------------------------------------
+// CONFIGURO CAPTURE PARA PIN ECHO DEL SENSOR Y FLAGS
+// ---------------------------------------------------------------------------------------
+
+static volatile uint32_t start_pulse = 0; // tiempo de rising edge de pwm
+static volatile uint32_t end_pulse = 0;   // tiempo de falling edge de pwm
+static volatile uint32_t high_time = 0;   // end_pulse - start_pulse
+static volatile int32_t distance_cm = -1; // distancia en cm
+static volatile uint32_t pin_status = 0;  // estado de pin
+static volatile uint8_t flag60_ms = 0;
+
+// ---------------------------------------------------------------------------------------
 // CONFIGURO PWM DE TIMER PARA PIN TRIG DEL SENSOR
 // ---------------------------------------------------------------------------------------
 
@@ -11,14 +22,13 @@
  * @brief Configura pulso para que sensor comience una muestra:
  *
  * Configura el pin P0.18 como GPIO output
- * Configura TIMER2 va a hacer un PWM de periodo 60ms con ese pin y le da start.
+ *
+ * Configura TIMER2 va a hacer un PWM de periodo 60ms y high_time 10us (segun datasheet de HC-SR04) con ese pin y le da start.
+ *
  * Conectar a pin TRIG del sensor para que comience una muestra.
  */
-static void config_timer1_pwm(void)
+void config_timer1_pwm(void)
 {
-    // PWM periodo 60ms y high_time 10us (datasheet de HC-SR04)
-    // se hace toggle de pin P0.18 en la ISR
-
     // config pin P1.0 como salida gpio
     GPIO_SetDir(PORT_0, 1 << 18, GPIO_OUTPUT);
     GPIO_SetPinState(PORT_0, PIN_18, DISABLE);
@@ -37,22 +47,22 @@ static void config_timer1_pwm(void)
     match0cfg.extOpt = TIM_NOTHING;
     match0cfg.matchValue = 10;
 
-    // TIM_MATCHCFG_T match1cfg; // periodo
-    // match1cfg.channel = TIM_MATCH_1;
-    // match1cfg.intEn = ENABLE;
-    // match1cfg.stopEn = DISABLE;
-    // match1cfg.resetEn = ENABLE;
-    // match1cfg.extOpt = TIM_NOTHING;
-    // match1cfg.matchValue = 60000; // 60ms
+    TIM_MATCHCFG_T match1cfg; // periodo
+    match1cfg.channel = TIM_MATCH_1;
+    match1cfg.intEn = ENABLE;
+    match1cfg.stopEn = DISABLE;
+    match1cfg.resetEn = ENABLE;
+    match1cfg.extOpt = TIM_NOTHING;
+    match1cfg.matchValue = 60000; // 60ms
 
     // reset de timer
     TIM_InitTimer(LPC_TIM1, &tim);
     TIM_Disable(LPC_TIM1);
     TIM_ResetCounter(LPC_TIM1);
     // config y prendo
-    // TIM_ConfigMatch(LPC_TIM1, &match1cfg);
+    TIM_ConfigMatch(LPC_TIM1, &match1cfg);
     TIM_ConfigMatch(LPC_TIM1, &match0cfg);
-    NVIC_EnableIRQ(TIMER2_IRQn);
+    NVIC_EnableIRQ(TIMER1_IRQn);
 }
 
 // pwm isr handler
@@ -68,25 +78,18 @@ void TIMER1_IRQHandler()
     {
         TIM_ClearIntPending(LPC_TIM1, TIM_MR1_INT);
         GPIO_SetPinState(PORT_0, PIN_18, 1);
+        if (distance_cm == -1 || distance_cm >= 500)
+            distance_cm = 500;
+        flag60_ms = 1;
     }
 }
-
-// ---------------------------------------------------------------------------------------
-// CONFIGURO CAPTURE PARA PIN ECHO DEL SENSOR
-// ---------------------------------------------------------------------------------------
-
-static volatile uint32_t start_pulse = 0;  // tiempo de rising edge de pwm
-static volatile uint32_t end_pulse = 0;    // tiempo de falling edge de pwm
-static volatile uint32_t high_time = 0;    // end_pulse - start_pulse
-static volatile uint32_t distance_cm = -1; // distancia en cm
-static volatile uint32_t pin_status = 0;   // estado de pin
 
 /**
  * @brief Configura el timer1 para que aumente la cuenta cada 1us y configura el CAP2.0 (P0.4) capture e interrumpa en flanco asc y desc
  *
  * La muestra se guarda en `distance_cm`
  */
-static void config_timer2_capture(void)
+void config_timer2_capture(void)
 {
     // configuro capture
     TIM_TIMERCFG_T timer_cfg;
@@ -167,7 +170,7 @@ void Ultrasonic_Init(void)
  * @brief Comienza timers desde reset y bloquea ejecucion hasta tener un resultado de distancia
  * @return distancia_cm
  */
-int Ultrasonic_GetDistance(void)
+uint16_t Ultrasonic_GetDistance(void)
 {
     TIM_ResetCounter(LPC_TIM1);
     TIM_ResetCounter(LPC_TIM2);
@@ -175,12 +178,13 @@ int Ultrasonic_GetDistance(void)
     GPIO_SetPinState(PORT_0, PIN_18, 1);
     TIM_Enable(LPC_TIM1);
     TIM_Enable(LPC_TIM2);
-    while (distance_cm == -1)
+    while (flag60_ms == 0)
     {
     };
-    TIM_Disable(LPC_TIM1); // ver de deshabilitar dentro de isr cuando termina, o con match config stop
-    TIM_Disable(LPC_TIM2); // ver de deshabilitar dentro de isr cuando termina, o con match config stop
-    int aux = distance_cm;
+    TIM_Disable(LPC_TIM1);
+    TIM_Disable(LPC_TIM2);
+    uint16_t aux = distance_cm;
     distance_cm = -1;
+    flag60_ms = 0;
     return aux;
 }

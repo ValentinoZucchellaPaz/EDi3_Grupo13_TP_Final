@@ -1,5 +1,7 @@
 #include "dac_config.h"
+#include "lpc17xx_gpio.h"
 
+/** @brief Configura el DAC y pin de salida */
 void DAC_Config(void)
 {
     DAC_Init();
@@ -7,26 +9,31 @@ void DAC_Config(void)
     DAC_UpdateValue(0);
 }
 
+/** @brief Maneja y actualiza salidas:
+ *
+ * - LED de proximidad (P0.22): prende con distancia menor 20cm
+ *
+ * - pin de Buzzer (P0.1): prende con distancia menor 5cm
+ *
+ * - señal DAC (P0.26): mapea distancia a rango de DAC y saca por ahi
+ * */
 void DAC_SetDistance(uint16_t distance)
 {
     uint16_t dac_value;
 
-    if(distance <= 5)
-        dac_value = 1023;
-    else if(distance <= 10)
-        dac_value = 900;
-    else if(distance <= 20)
-        dac_value = 700;
-    else if(distance <= 30)
-        dac_value = 500;
-    else if(distance <= 40)
-        dac_value = 350;
-    else if(distance <= 50)
-        dac_value = 250;
-    else if(distance <= 70)
-        dac_value = 100;
+    // LED indicador
+    if (distance < 20)
+        GPIO_SetPinState(PORT_0, PIN_22, 0);
     else
-        dac_value = 0;
+        GPIO_SetPinState(PORT_0, PIN_22, 1);
 
+    // Buzer
+    if (distance <= 5)
+        GPIO_SetPinState(PORT_0, PIN_1, 1);
+    else
+        GPIO_SetPinState(PORT_0, PIN_1, 0);
+
+    // Onda DAC - Osciloscopio
+    dac_value = (((500 - distance) * 1023) / 500);
     DAC_UpdateValue(dac_value);
 }
