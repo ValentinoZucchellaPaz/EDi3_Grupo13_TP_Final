@@ -4,7 +4,7 @@
 > **Integrantes:**
 >
 > - Garay, Alexis Tomas
-> - Guzman Gonzales, Pedro
+> - Guzman Gonzalez, Pedro
 > - Zucchella Paz, Valentino
 >
 > **Profesor:** Blasco, Marcos Javier
