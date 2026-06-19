@@ -20,7 +20,7 @@ El sistema resuelve la necesidad de visualizar la distribución espacial de obje
 ---
 
 <p align="center">
-  <img src="./docs/video_cantina.gif" />
+  <img src="./docs/presentacion.gif" />
 </p>
 
 <p align="center">
