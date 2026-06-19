@@ -1,6 +1,6 @@
 # Radar Ultrasónico 180° con Control Dual
 
-> **Asignatura:** Electrónica Digital III - Universidad Nacional de Córdoba
+> **Electrónica Digital III - FCEFyN - UNC**  
 > **Integrantes:**
 >
 > - Garay, Alexis Tomas
@@ -58,7 +58,7 @@ El sistema resuelve la necesidad de visualizar la distribución espacial de obje
 - **Esquemático del Circuito:**
   ![diagrama circuital](./docs/diagrama%20Circuital.jpeg)
 
-- **Consideraciones:**
+- **Consideraciones importantes:**
 
   La LPC1769 opera a 3.3V vía USB; el HC-SR04 y el SG90 se alimentan a 5V desde una fuente externa. Como el ECHO del sensor entrega 5V, se usa un divisor resistivo para bajarlo a 3.3V antes de ingresar a la placa.
 
@@ -79,7 +79,7 @@ El sistema resuelve la necesidad de visualizar la distribución espacial de obje
 | P0.22   | LED proximidad (<20cm)    | LED rojo      |
 | P0.23   | Potenciómetro (ADC CH0)   | 10kΩ pot      |
 | P0.26   | DAC (osciloscopio)        | Osciloscopio  |
-| P3.25   | LED modo manual           | LED amarillo  |
+| P3.25   | LED modo manual           | LED verde     |
 
 ### Firmware
 
