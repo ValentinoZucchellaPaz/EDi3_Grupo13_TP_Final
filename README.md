@@ -3,10 +3,11 @@
 > **Asignatura:** Electrónica Digital III - Universidad Nacional de Córdoba
 > **Integrantes:**
 >
-> - [NOMBRE APELLIDO]
-> - [NOMBRE APELLIDO]
+> - Garay, Alexis Tomas
+> - Guzman, Pedro
+> - Zucchella Paz, Valentino
 >
-> **Profesor:** [NOMBRE DEL PROFESOR]
+> **Profesor:** Blasco, Marcos Javier
 
 ---
 
@@ -15,6 +16,22 @@
 El sistema implementa un radar ultrasónico de barrido 180° sobre un microcontrolador LPC1769 (ARM Cortex-M3). Un sensor HC-SR04 montado sobre un servomotor SG90 realiza mediciones de distancia mientras barre el espacio frente a él. Los datos capturados se transmiten por UART a una PC, donde un script Python los grafica en tiempo real en formato polar, recreando visualmente la imagen de un radar.
 
 El sistema resuelve la necesidad de visualizar la distribución espacial de objetos en un entorno de forma no invasiva y a bajo costo. Está orientado a aplicaciones educativas y de prototipado, sirviendo como base para sistemas de detección de presencia o asistencia a la navegación en robótica.
+
+---
+
+<p align="center">
+  <img src="./docs/video_cantina.gif" />
+</p>
+
+<p align="center">
+  <img src="./docs/deteccion_de_personas.gif" />
+</p>
+
+<p align="center">
+  <a href="#evidencia-fotográfica-y-gráficos">Ver mas imagenes</a>
+</p>
+   
+---
 
 ### 🎯 Alcances del Proyecto
 
@@ -36,10 +53,14 @@ El sistema resuelve la necesidad de visualizar la distribución espacial de obje
 
 ### 🔌 Hardware & Interconexión
 
-- **Diagrama de Bloques:** [INSERTAR DIAGRAMA DE BLOQUES]
+- **Diagrama de Bloques:**
+  ![diagrama en bloques](./docs/diagrama.png)
 
-- **Esquemático del Circuito:** [INSERTAR ESQUEMÁTICO]
-  `![Esquemático Completo](hardware/esquematico.png)`
+- **Esquemático del Circuito:**
+  ![diagrama circuital](./docs/diagrama%20Circuital.jpeg)
+
+- **Esquemático de Flujo:**
+  ![diagrama de flujo](./docs/Diagrama%20de%20Flujo.png)
 
 - **Descripción del Circuito y Consideraciones de Diseño:**
 
@@ -154,13 +175,19 @@ El script recibe los paquetes UART, valida la cantidad de bytes recibidos contra
 ### Evidencia Fotográfica y Gráficos
 
 - **Captura de osciloscopio – señal DAC distancia / línea 5V servo:**
-  `[INSERTAR CAPTURA OSCILOSCOPIO]`
+<p align="center">
+  <img src="./docs/dac_output.gif" />
+</p>
 
 - **Screenshot interfaz Python – radar en funcionamiento:**
-  `[INSERTAR SCREENSHOT INTERFAZ PYTHON]`
+<p align="center">
+  <img src="./docs/interfaz_python.jpeg" />
+</p>
 
 - **Foto del prototipo real:**
-  `[INSERTAR FOTO HARDWARE]`
+<p align="center">
+  <img src="./docs/prototipo_real.jpeg" />
+</p>
 
 ---
 
